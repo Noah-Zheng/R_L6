@@ -45,3 +45,62 @@ ggplot(dd2, aes(volume, price)) +
   xlim(0, quantile(dd2$volume, .99))
 ```
 
+
+```{r}
+#facebook data. new variable 'prop_initiated' = friend_initiated/friend_count.
+fb <- read.delim("pseudo_facebook.tsv")
+
+fb <- transform(fb, prop_initiated = friendships_initiated / friend_count)
+head(fb)
+
+
+```
+
+
+```{r}
+#line graph, prop vs tenure, color by year_joined.bucket
+fb <- transform(fb, year_joined = floor(2014 - tenure/365))
+
+fb$year_joined.bucket <- cut(fb$year_joined, 
+                             breaks = c(2004, 2009, 2011, 2012, 2014))
+
+ggplot(subset(fb, !is.na(fb$prop_initiated)), aes(tenure, prop_initiated)) +
+  geom_line(aes(color = year_joined.bucket),
+            stat = "summary",
+            fun.y = median) 
+  
+```
+
+
+```{r}
+#smooth 
+
+ggplot(subset(fb, !is.na(fb$prop_initiated)), aes(7*round(tenure/7), prop_initiated)) +
+  geom_line(aes(color = year_joined.bucket),
+            stat = "summary",
+            fun.y = median) 
+
+ggplot(subset(fb, !is.na(fb$prop_initiated)), aes(tenure, prop_initiated)) +
+  geom_smooth(aes(color = year_joined.bucket)) 
+
+```
+
+
+```{r}
+library(dplyr)
+a <- subset(fb, !is.na(fb$prop_initiated) & !is.na(fb$year_joined.bucket)) %>%
+  group_by(year_joined.bucket) %>%
+  summarise(mean = mean(prop_initiated))
+
+```
+
+
+```{r}
+#scatter plot, price/carat, x = cut, color by color, faceted by clarity
+
+ggplot(dd2, aes(cut, price/carat)) +
+  geom_point(aes(color = color), position = position_jitter()) +
+  facet_wrap(~clarity)
+
+```
+
