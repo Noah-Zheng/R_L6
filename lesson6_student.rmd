@@ -18,8 +18,18 @@ dd <- diamonds
 ```
 
 ```{r}
-ggplot(dd, aes(x,price)) +
-  geom_point(alpha = 0.05, position = position_jitter())
+ggplot(dd, aes(carat,price)) +
+  geom_point(alpha = 0.05, position = position_jitter()) +
+  xlim(0, quantile(dd$carat, .99)) +
+  ylim(300, quantile(dd$price, .99))
+```
+
+```{r}
+ggplot(dd, aes(carat,price)) +
+  geom_point(alpha = 0.05, position = position_jitter()) +
+  xlim(0, quantile(dd$carat, .99)) +
+  ylim(300, quantile(dd$price, .99)) +
+  stat_smooth(method = 'lm')
 ```
 
 ```{r}
@@ -173,6 +183,19 @@ Response:
 Notes:
 
 ```{r The Demand of Diamonds}
+library(ggplot2)
+library(gridExtra)
+
+p1 <- qplot(data = dd, x = price, binwidth = 100) +
+  ggtitle('Price')
+
+p2 <- qplot(data = dd, x = log(price), binwidth = 0.01) +
+  ggtitle('Price(log10)')
+
+p3 <- qplot(data = dd, x = price, binwidth = 0.01) +
+  scale_x_log10()
+
+grid.arrange(p1,p2,p3, ncol = 1)
 
 ```
 
@@ -186,7 +209,8 @@ Notes:
 ### Scatterplot Transformation
 
 ```{r Scatterplot Transformation}
-
+qplot(carat, price, data = dd) +
+  scale_y_continuous(trans = "log10")
 ```
 
 
@@ -213,13 +237,14 @@ ggplot(aes(carat, price), data = diamonds) +
 ### Overplotting Revisited
 
 ```{r Sort and Head Tables}
-
+head(sort(table(dd$carat), decreasing = T))
+head(sort(table(dd$price), decreasing = T))
 ```
 
 
 ```{r Overplotting Revisited}
 ggplot(aes(carat, price), data = diamonds) + 
-  geom_point() + 
+  geom_point(alpha = 1/100, size = I(.5), position = position_jitter()) + 
   scale_x_continuous(trans = cuberoot_trans(), limits = c(0.2, 3),
                      breaks = c(0.2, 0.5, 1, 2, 3)) + 
   scale_y_continuous(trans = log10_trans(), limits = c(350, 15000),
@@ -362,7 +387,9 @@ https://github.com/solomonm/diamonds-data
 Notes:
 
 ```{r Building a Model Using the Big Diamonds Data Set}
-
+m1 <- lm(I(log(price)~I(carat^(1/3)), data = dd))
+m2 <- update(m1, ~. + carat)
+m3 <- update(m2, ~. + cut)
 ```
 
 
